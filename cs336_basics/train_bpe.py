@@ -87,7 +87,7 @@ def train_bpe(input_path: str, vocab_size: int, special_tokens: list[str]):
         vocab[len(vocab)] = bytes((i,))
 
     with open(input_path, "rb") as f:
-        num_processes = 1
+        num_processes = 4
         boundaries = find_chunk_boundaries(f, num_processes, b"<|endoftext|>")
 
         # The following is a serial implementation, but you can parallelize this
