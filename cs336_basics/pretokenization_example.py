@@ -60,7 +60,7 @@ with open("data/TinyStoriesV2-GPT4-valid.txt", "rb") as f:
     # The following is a serial implementation, but you can parallelize this
     # by sending each start/end pair to a set of processes.
     special_tokens = ["<|endoftext|>"]
-
+    
 
     for start, end in zip(boundaries[:-1], boundaries[1:]):
         f.seek(start)
