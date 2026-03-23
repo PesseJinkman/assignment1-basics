@@ -58,7 +58,8 @@ def _pretokenize_chunk(args):
  
     with open(input_path, "rb") as f:
         f.seek(start)
-        chunk = f.read(end - start).decode("utf-8", errors="ignore")
+        # Added replace() to be made usable on Windows
+        chunk = f.read(end - start).decode("utf-8", errors="ignore").replace("\r\n", "\n")
  
     pattern = "|".join(
         re.escape(token) for token in sorted(special_tokens, key=len, reverse=True)
@@ -86,7 +87,7 @@ def train_bpe(input_path: str, vocab_size: int, special_tokens: list[str]):
         vocab[len(vocab)] = bytes((i,))
 
     with open(input_path, "rb") as f:
-        num_processes = 4
+        num_processes = 1
         boundaries = find_chunk_boundaries(f, num_processes, b"<|endoftext|>")
 
         # The following is a serial implementation, but you can parallelize this
@@ -172,5 +173,5 @@ def train_bpe(input_path: str, vocab_size: int, special_tokens: list[str]):
         
     return vocab, merges
 
-if __name__ == "__main__":
-    vocab, merges = train_bpe("data/test.txt", 300, ['<|endoftext|>'])
+# if __name__ == "__main__":
+#     vocab, merges = train_bpe("data/test.txt", 300, ['<|endoftext|>'])
