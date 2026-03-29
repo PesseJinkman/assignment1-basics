@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from calendar import c
 import os
 from collections.abc import Iterable
 from typing import IO, Any, BinaryIO
@@ -18,7 +19,7 @@ from cs336_basics.ffn import silu_activation, SwiGLU
 from cs336_basics.rope import RoPE
 from cs336_basics.softmax import softmax
 from cs336_basics.scaled_dot_product_attention import scaled_dot_product_attention
-
+from cs336_basics.multihead_self_attention import CausalMultiHeadSelfAttention
 
 def run_linear(
     d_in: int,
@@ -156,7 +157,10 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    cmhsa = CausalMultiHeadSelfAttention(d_model, num_heads)
+    cmhsa.W_qkv.W.data = torch.cat([q_proj_weight, k_proj_weight, v_proj_weight], dim=0)
+    cmhsa.output_proj.W.data = o_proj_weight
+    return cmhsa(in_features)
 
 
 def run_multihead_self_attention_with_rope(
@@ -196,7 +200,12 @@ def run_multihead_self_attention_with_rope(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+
+    rope = RoPE(theta, d_model//num_heads, max_seq_len)
+    cmhsa = CausalMultiHeadSelfAttention(d_model, num_heads)
+    cmhsa.W_qkv.W.data = torch.cat([q_proj_weight, k_proj_weight, v_proj_weight], dim=0)
+    cmhsa.output_proj.W.data = o_proj_weight
+    return cmhsa(in_features, rope, token_positions)
 
 
 def run_rope(
