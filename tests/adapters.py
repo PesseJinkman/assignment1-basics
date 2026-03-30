@@ -20,6 +20,8 @@ from cs336_basics.rope import RoPE
 from cs336_basics.softmax import softmax
 from cs336_basics.scaled_dot_product_attention import scaled_dot_product_attention
 from cs336_basics.multihead_self_attention import CausalMultiHeadSelfAttention
+from cs336_basics.transformer_block import TransformerBlock
+from cs336_basics.transformer_lm import TransformerLM
 
 def run_linear(
     d_in: int,
@@ -300,7 +302,19 @@ def run_transformer_block(
         Float[Tensor, "batch sequence_length d_model"] Tensor with the output of
         running the Transformer block on the input features while using RoPE.
     """
-    raise NotImplementedError
+    rope = RoPE(theta, d_model//num_heads, max_seq_len)
+    transformer_block = TransformerBlock(d_model=d_model, num_heads=num_heads, d_ff=d_ff)
+    transformer_block.mhsa.W_qkv.W.data = torch.cat([weights["attn.q_proj.weight"], weights["attn.k_proj.weight"], weights["attn.v_proj.weight"]], dim=0)
+    transformer_block.mhsa.output_proj.W.data = weights["attn.output_proj.weight"]
+    transformer_block.rmsnorm1.gain.data = weights["ln1.weight"]
+    transformer_block.rmsnorm2.gain.data = weights["ln2.weight"]
+    transformer_block.ffn.W1.W.data = weights["ffn.w1.weight"]
+    transformer_block.ffn.W2.W.data = weights["ffn.w2.weight"]
+    transformer_block.ffn.W3.W.data = weights["ffn.w3.weight"]
+
+    return transformer_block(x=in_features, rope=rope)
+
+
 
 
 def run_transformer_lm(
@@ -382,7 +396,35 @@ def run_transformer_lm(
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
     """
-    raise NotImplementedError
+    llm = TransformerLM(
+        d_model=d_model,
+        num_heads=num_heads,
+        d_ff=d_ff,
+        vocab_size=vocab_size,
+        context_length=context_length,
+        num_layers=num_layers,
+        rope_theta=rope_theta
+    )
+
+    # Token embeddings
+    llm.token_embeddings.embedding.data = weights["token_embeddings.weight"]
+    
+    # Per-layer weights
+    for i in range(num_layers):
+        llm.transformer_layers[i].mhsa.W_qkv.W.data = torch.cat([weights[f"layers.{i}.attn.q_proj.weight"], weights[f"layers.{i}.attn.k_proj.weight"], weights[f"layers.{i}.attn.v_proj.weight"]], dim=0)
+        llm.transformer_layers[i].mhsa.output_proj.W.data = weights[f"layers.{i}.attn.output_proj.weight"]
+        llm.transformer_layers[i].rmsnorm1.gain.data = weights[f"layers.{i}.ln1.weight"]
+        llm.transformer_layers[i].rmsnorm2.gain.data = weights[f"layers.{i}.ln2.weight"]
+        llm.transformer_layers[i].ffn.W1.W.data = weights[f"layers.{i}.ffn.w1.weight"]
+        llm.transformer_layers[i].ffn.W2.W.data = weights[f"layers.{i}.ffn.w2.weight"]
+        llm.transformer_layers[i].ffn.W3.W.data = weights[f"layers.{i}.ffn.w3.weight"]
+    
+    # Final layer norm + LM head
+    llm.rmsnorm_final.gain.data = weights["ln_final.weight"]
+    llm.lm_head.W.data = weights["lm_head.weight"]
+    
+    return llm(in_indices)
+
 
 
 def run_rmsnorm(
