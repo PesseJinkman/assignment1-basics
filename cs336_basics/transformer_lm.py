@@ -16,8 +16,8 @@ class TransformerLM(torch.nn.Module):
         context_length: int,
         num_layers: int,
         rope_theta: float = 10000.0,
-        device=None,
-        dtype=None
+        device : torch.device | None = None,
+        dtype : torch.dtype | None = None
     ) -> None:
         super().__init__()
 
