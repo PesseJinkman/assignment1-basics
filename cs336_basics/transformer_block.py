@@ -16,9 +16,8 @@ class TransformerBlock(torch.nn.Module):
     
     def forward(self, x: torch.Tensor, rope : RoPE | None = None, token_positions: torch.Tensor | None = None) -> torch.Tensor:
         
-        x += self.mhsa(self.rmsnorm1(x), rope, token_positions)
-        x += self.ffn(self.rmsnorm2(x))
+        x = x + self.mhsa(self.rmsnorm1(x), rope, token_positions)
+        x = x + self.ffn(self.rmsnorm2(x))
 
         return x
-
 

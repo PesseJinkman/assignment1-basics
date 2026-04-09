@@ -1,0 +1,44 @@
+{
+  "data": {
+    "train_path": "data/TinyStoriesV2-GPT4-train.npy",
+    "val_path": "data/TinyStoriesV2-GPT4-valid.npy",
+    "dtype": "uint16"
+  },
+  "model": {
+    "vocab_size": 10000,
+    "context_length": 256,
+    "d_model": 512,
+    "num_layers": 4,
+    "num_heads": 16,
+    "d_ff": 1344,
+    "rope_theta": 10000.0
+  },
+  "optimizer": {
+    "lr": 0.0003,
+    "betas": [0.9, 0.95],
+    "eps": 1e-8,
+    "weight_decay": 0.1,
+    "max_grad_norm": 1.0
+  },
+  "training": {
+    "batch_size": 32,
+    "max_iters": 40000,
+    "warmup_iters": 1000,
+    "lr_decay_iters": 10000,
+    "min_lr": 0.00003,
+    "eval_interval": 500,
+    "eval_iters": 50,
+    "log_interval": 10,
+    "checkpoint_interval": 5000,
+    "checkpoint_dir": "checkpoints",
+    "resume_from": null,
+    "compile": false,
+    "seed": 1337,
+    "device": "auto"
+  },
+  "wandb": {
+    "enabled": true,
+    "project": "cs336-basics",
+    "run_name": "exp-1"
+  }
+}
