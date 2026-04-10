@@ -23,8 +23,8 @@
   "training": {
     "batch_size": 32,
     "max_iters": 40000,
-    "warmup_iters": 1000,
-    "lr_decay_iters": 10000,
+    "warmup_iters": 1500,
+    "lr_decay_iters": 40000,
     "min_lr": 0.00003,
     "eval_interval": 500,
     "eval_iters": 50,
@@ -39,6 +39,6 @@
   "wandb": {
     "enabled": true,
     "project": "cs336-basics",
-    "run_name": "exp-1"
+    "run_name": "exp-2"
   }
 }
